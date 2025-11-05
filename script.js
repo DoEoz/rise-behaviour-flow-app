@@ -1,5 +1,4 @@
-
-// Simple decision tree for RISE behaviour flow
+// Simple decision tree for RISE behaviour flow with Head Teacher and Home button
 const app = document.getElementById('app');
 const promptEl = document.getElementById('prompt');
 const buttonsEl = document.getElementById('buttons');
@@ -7,6 +6,7 @@ const backEl = document.getElementById('back');
 
 let historyStack = [];
 
+// Define the flow states and transitions
 const flows = {
     start: {
         prompt: 'Is the behaviour MINOR?',
@@ -63,16 +63,35 @@ const flows = {
         prompt: 'Reissue detention and remind the student to attend.',
         options: []
     },
+    // Head Teacher intervention: provide options for actions or referral
     refer_ht: {
-        prompt: 'Refer to Head Teacher for further action.',
+        prompt: 'Head Teacher Intervention',
+        options: [
+            { label: 'Issue Faculty Detention / Monitoring Card / Restorative Conversation', next: 'ht_follow_up' },
+            { label: 'Behaviour meets DP-level criteria (e.g., significant defiance / ongoing truancy / abusive language)', next: 'refer_dp' }
+        ]
+    },
+    // After HT intervention, check if behaviour improved
+    ht_follow_up: {
+        prompt: 'After HT intervention and reflection, has the behaviour improved?',
+        options: [
+            { label: 'Yes', next: 'resolved' },
+            { label: 'No', next: 'refer_dp' }
+        ]
+    },
+    // DP referral state with suggestions
+    refer_dp: {
+        prompt: 'Refer to Deputy Principal for intervention. Possible DP Actions: Wednesday Detention, Monitoring Booklet, Restorative Conversation, Formal Caution.',
         options: []
     }
 };
 
+// Render the current state by updating the prompt and buttons
 function renderState(stateKey) {
     const state = flows[stateKey];
     promptEl.textContent = state.prompt;
     buttonsEl.innerHTML = '';
+
     state.options.forEach(opt => {
         const btn = document.createElement('button');
         btn.textContent = opt.label;
@@ -83,9 +102,10 @@ function renderState(stateKey) {
         buttonsEl.appendChild(btn);
     });
 
-    // Show back button if we have history
+    // Render navigation buttons: Back and Home
     backEl.innerHTML = '';
     if (historyStack.length > 0) {
+        // Back button returns to previous state
         const backBtn = document.createElement('button');
         backBtn.textContent = 'Back';
         backBtn.onclick = () => {
@@ -93,8 +113,17 @@ function renderState(stateKey) {
             renderState(prevState);
         };
         backEl.appendChild(backBtn);
+
+        // Home button resets to start
+        const homeBtn = document.createElement('button');
+        homeBtn.textContent = 'Home';
+        homeBtn.onclick = () => {
+            historyStack = [];
+            renderState('start');
+        };
+        backEl.appendChild(homeBtn);
     }
 }
 
-// Initialize
+// Initialize the app
 renderState('start');
